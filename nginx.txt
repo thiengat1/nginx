@@ -1,0 +1,88 @@
+server
+{
+	listen 80;
+	listen 443 ssl http2;
+	listen 88;
+    server_name oa.pbe.com 103.21.14.231 olaola.023hlyy.com web.apple.com calendar.pbe.com esc.luckyteck.com;
+    index index.php index.html index.htm default.php default.htm default.html;
+    root /www/wwwroot/web.oa.com;
+    
+    # api服务器
+    location /api {
+    	proxy_pass http://localhost:89/api;
+        proxy_set_header Host $host;
+      	proxy_set_header X-Real-IP $remote_addr;
+      	proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+    # 资源服务器
+    location /resources {
+    	proxy_pass http://localhost:90/resources;
+    }
+    #【測試】socket
+    location /chat {
+    	proxy_pass http://172.18.0.206:8282;
+    }
+ 
+    
+    
+    #SSL-START SSL相关配置，请勿删除或修改下一行带注释的404规则
+    #error_page 404/404.html; #server可接受的连接  #对于每个IP地址，允许接受多少连接      #每个连接可传输的容量
+    ssl_certificate    /www/server/panel/vhost/cert/web.oa.com/fullchain.pem;
+    ssl_certificate_key    /www/server/panel/vhost/cert/web.oa.com/privkey.pem;
+    ssl_protocols TLSv1.1 TLSv1.2 TLSv1.3;
+    ssl_ciphers EECDH+CHACHA20:EECDH+CHACHA20-draft:EECDH+AES128:RSA+AES128:EECDH+AES256:RSA+AES256:EECDH+3DES:RSA+3DES:!MD5;
+    ssl_prefer_server_ciphers on;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 10m;
+    add_header Strict-Transport-Security "max-age=31536000";
+    error_page 497  https://$host$request_uri;
+
+
+    #SSL-END
+	
+    
+    #ERROR-PAGE-START  错误页配置，可以注释、删除或修改
+    #error_page 404 /404.html;
+    #error_page 502 /502.html;
+    #ERROR-PAGE-END
+    
+    #PHP-INFO-START  PHP引用配置，可以注释或修改
+    include enable-php-71.conf;
+    #PHP-INFO-END
+    
+    #REWRITE-START URL重写规则引用,修改后将导致面板设置的伪静态规则失效
+    include /www/server/panel/vhost/rewrite/web.oa.com.conf;
+    #REWRITE-END
+    
+    location / { 
+    # Redirect everything that isnt a real file to index.php  
+     try_files $uri $uri/ /index.php?$args;  
+    }
+    
+    #禁止访问的文件或目录
+    location ~ ^/(\.user.ini|\.htaccess|\.git|\.svn|\.project|LICENSE|README.md)
+    {
+        return 404;
+    }
+    
+    #一键申请SSL证书验证目录相关设置
+    location ~ \.well-known{
+        allow all;
+    }
+    
+    #location ~ .*\.(gif|jpg|jpeg|png|bmp|swf)$
+    #{
+    #    expires      30d;
+    #    error_log off;
+    #    access_log /dev/null;
+    #}
+    
+    #location ~ .*\.(js|css)?$
+    #{
+    #    expires      12h;
+    #    error_log off;
+    #    access_log /dev/null; 
+    #}
+    access_log  /www/wwwlogs/web.oa.com.log;
+    error_log  /www/wwwlogs/web.oa.com.error.log;
+}
